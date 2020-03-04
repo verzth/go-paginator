@@ -1,4 +1,4 @@
-module paginator
+module go-paginator
 
 go 1.13
 
