@@ -25,10 +25,10 @@ type Pagination struct {
 	CurrentPage int `json:"current_page"`
 	Offset int `json:"-"`
 	FirstPageUrl string `json:"first_page_url"`
-	PrevPage int `json:"prev_page"`
-	PrevPageUrl string `json:"prev_page_url"`
-	NextPage int `json:"next_page"`
-	NextPageUrl string `json:"next_page_url"`
+	PrevPage *int `json:"prev_page"`
+	PrevPageUrl *string `json:"prev_page_url"`
+	NextPage *int `json:"next_page"`
+	NextPageUrl *string `json:"next_page_url"`
 	LastPage int `json:"last_page"`
 	LastPageUrl string `json:"last_page_url"`
 	Path string `json:"path"`
@@ -52,7 +52,7 @@ func Paginate(p *Param, result interface{}) *Pagination {
 		}
 	}
 
-	done := make(chan bool, 1)
+	done := make(chan bool, 2)
 	var paginate Pagination
 	var countInPage int
 	var count int
@@ -67,8 +67,9 @@ func Paginate(p *Param, result interface{}) *Pagination {
 	}
 
 	db = db.Limit(p.Limit).Offset(offset)
-	db.Count(&countInPage)
+	go countData(db, done, &countInPage)
 	db.Find(result)
+	<-done
 	<-done
 
 	paginate.FirstPageUrl = fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, 1)
@@ -91,19 +92,24 @@ func Paginate(p *Param, result interface{}) *Pagination {
 	}
 
 	if p.Page > 1 {
-		paginate.PrevPage = p.Page - 1
-	} else {
-		paginate.PrevPage = p.Page
+		prevPage := p.Page - 1
+		prevPageUrl := fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, paginate.PrevPage)
+		paginate.PrevPage = &prevPage
+		paginate.PrevPageUrl = &prevPageUrl
 	}
-	paginate.PrevPageUrl = fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, paginate.PrevPage)
 
-	if p.Page == paginate.LastPage {
-		paginate.NextPage = p.Page
-	} else {
-		paginate.NextPage = p.Page + 1
+	if p.Page < paginate.LastPage {
+		nextPage := p.Page + 1
+		nextPageUrl := fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, paginate.NextPage)
+		paginate.NextPage = &nextPage
+		paginate.NextPageUrl = &nextPageUrl
 	}
-	paginate.NextPageUrl = fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, paginate.NextPage)
 	return &paginate
+}
+
+func countData(db *gorm.DB, done chan bool, count *int) {
+	db.Count(count)
+	done <- true
 }
 
 func countRecords(db *gorm.DB, anyType interface{}, done chan bool, count *int) {
