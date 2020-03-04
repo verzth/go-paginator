@@ -54,6 +54,7 @@ func Paginate(p *Param, result interface{}) *Pagination {
 
 	done := make(chan bool, 1)
 	var paginate Pagination
+	var countInPage int
 	var count int
 	var offset int
 
@@ -65,7 +66,9 @@ func Paginate(p *Param, result interface{}) *Pagination {
 		offset = (p.Page - 1) * p.Limit
 	}
 
-	db.Limit(p.Limit).Offset(offset).Find(result)
+	db = db.Limit(p.Limit).Offset(offset)
+	db.Count(&countInPage)
+	db.Find(result)
 	<-done
 
 	paginate.FirstPageUrl = fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, 1)
@@ -79,9 +82,9 @@ func Paginate(p *Param, result interface{}) *Pagination {
 	paginate.PerPage = p.Limit
 	paginate.LastPage = int(math.Ceil(float64(count) / float64(p.Limit)))
 	paginate.LastPageUrl = fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, paginate.LastPage)
-	if paginate.Total > 0 {
+	if countInPage > 0 {
 		paginate.From = offset+1
-		paginate.To = offset+len(paginate.Data.([]*interface{}))
+		paginate.To = offset+countInPage
 	} else {
 		paginate.From = 0
 		paginate.To = 0
