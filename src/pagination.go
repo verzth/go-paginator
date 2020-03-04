@@ -67,7 +67,7 @@ func Paginate(p *Param, result interface{}) *Pagination {
 	}
 
 	db = db.Limit(p.Limit).Offset(offset)
-	go countData(db, done, &countInPage)
+	go countData(db, result, done, &countInPage)
 	db.Find(result)
 	<-done
 	<-done
@@ -107,8 +107,8 @@ func Paginate(p *Param, result interface{}) *Pagination {
 	return &paginate
 }
 
-func countData(db *gorm.DB, done chan bool, count *int) {
-	db.Count(count)
+func countData(db *gorm.DB, anyType interface{}, done chan bool, count *int) {
+	db.Model(anyType).Count(count)
 	done <- true
 }
 
