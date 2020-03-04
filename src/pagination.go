@@ -52,7 +52,7 @@ func Paginate(p *Param, result interface{}) *Pagination {
 		}
 	}
 
-	done := make(chan bool, 2)
+	done := make(chan bool, 1)
 	var paginate Pagination
 	var countInPage int
 	var count int
@@ -66,10 +66,10 @@ func Paginate(p *Param, result interface{}) *Pagination {
 		offset = (p.Page - 1) * p.Limit
 	}
 
-	db = db.Limit(p.Limit).Offset(offset)
-	go countData(db, result, done, &countInPage)
-	db.Find(result)
-	<-done
+	db.Limit(p.Limit).Offset(offset).Find(result)
+	countInPage = len(result.([]*interface{}))
+	fmt.Println(result)
+	fmt.Println(countInPage)
 	<-done
 
 	paginate.FirstPageUrl = fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, 1)
@@ -105,11 +105,6 @@ func Paginate(p *Param, result interface{}) *Pagination {
 		paginate.NextPageUrl = &nextPageUrl
 	}
 	return &paginate
-}
-
-func countData(db *gorm.DB, anyType interface{}, done chan bool, count *int) {
-	db.Model(anyType).Count(count)
-	done <- true
 }
 
 func countRecords(db *gorm.DB, anyType interface{}, done chan bool, count *int) {
