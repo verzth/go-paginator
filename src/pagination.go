@@ -20,7 +20,7 @@ type Pagination struct {
 	From int `json:"from"`
 	To int `json:"to"`
 	Total int `json:"total"`
-	Data []interface{} `json:"data"`
+	Data interface{} `json:"data"`
 	PerPage int `json:"per_page"`
 	CurrentPage int `json:"current_page"`
 	Offset int `json:"-"`
@@ -72,7 +72,7 @@ func Paginate(p *Param, result interface{}) *Pagination {
 	paginate.Path = fmt.Sprintf("%s%s", p.Req.Host, p.Req.URL.Path)
 
 	paginate.Total = count
-	paginate.Data = result.([]interface{})
+	paginate.Data = result
 	paginate.CurrentPage = p.Page
 
 	paginate.Offset = offset
@@ -81,7 +81,7 @@ func Paginate(p *Param, result interface{}) *Pagination {
 	paginate.LastPageUrl = fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, paginate.LastPage)
 	if paginate.Total > 0 {
 		paginate.From = offset+1
-		paginate.To = offset+len(paginate.Data)
+		paginate.To = offset+len(paginate.Data.([]interface{}))
 	} else {
 		paginate.From = 0
 		paginate.To = 0
