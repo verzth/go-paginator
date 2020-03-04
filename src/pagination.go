@@ -93,14 +93,14 @@ func Paginate(p *Param, result interface{}) *Pagination {
 
 	if p.Page > 1 {
 		prevPage := p.Page - 1
-		prevPageUrl := fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, paginate.PrevPage)
+		prevPageUrl := fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, prevPage)
 		paginate.PrevPage = &prevPage
 		paginate.PrevPageUrl = &prevPageUrl
 	}
 
 	if p.Page < paginate.LastPage {
 		nextPage := p.Page + 1
-		nextPageUrl := fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, paginate.NextPage)
+		nextPageUrl := fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, nextPage)
 		paginate.NextPage = &nextPage
 		paginate.NextPageUrl = &nextPageUrl
 	}
