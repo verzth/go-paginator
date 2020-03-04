@@ -1,4 +1,4 @@
-module go-paginator
+module github.com/verzth/go-paginator
 
 go 1.13
 
