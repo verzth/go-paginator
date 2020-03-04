@@ -65,8 +65,9 @@ func Paginate(p *Param, result interface{}) *Pagination {
 	} else {
 		offset = (p.Page - 1) * p.Limit
 	}
-
-	db.Limit(p.Limit).Offset(offset).Find(result).Count(&countInPage)
+	var ids []uint
+	db.Limit(p.Limit).Offset(offset).Find(result).Pluck("id", &ids)
+	countInPage = len(ids)
 	<-done
 
 	paginate.FirstPageUrl = fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, 1)
