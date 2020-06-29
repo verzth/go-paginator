@@ -5,6 +5,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"math"
 	"net/http"
+	"reflect"
 )
 
 type Param struct {
@@ -65,7 +66,12 @@ func Paginate(p *Param, result interface{}) *Pagination {
 	} else {
 		offset = (p.Page - 1) * p.Limit
 	}
-	db.Limit(p.Limit).Offset(offset).Find(result).Count(&countInPage)
+	db.Limit(p.Limit).Offset(offset).Find(result)
+
+	indirect := reflect.ValueOf(result)
+	if indirect.IsValid() && indirect.Elem().Kind() == reflect.Slice {
+		countInPage = indirect.Elem().Len()
+	}
 	<-done
 
 	paginate.FirstPageUrl = fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, 1)
