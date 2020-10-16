@@ -110,6 +110,6 @@ func Paginate(p *Param, result interface{}) *Pagination {
 }
 
 func countRecords(db *gorm.DB, anyType interface{}, done chan bool, count *int64) {
-	db.Model(anyType).Count(count)
+	db.Session(&gorm.Session{}).Model(anyType).Count(count)
 	done <- true
 }
