@@ -66,7 +66,7 @@ func Paginate(p *Param, result interface{}) *Pagination {
 	} else {
 		offset = (p.Page - 1) * p.Limit
 	}
-	db.Limit(p.Limit).Offset(offset).Find(result)
+	db.Session(&gorm.Session{}).Limit(p.Limit).Offset(offset).Find(result)
 
 	indirect := reflect.ValueOf(result)
 	if indirect.IsValid() && indirect.Elem().Kind() == reflect.Slice {
