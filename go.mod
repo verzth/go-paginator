@@ -1,4 +1,4 @@
-module github.com/verzth/go-paginator
+module git.teknoku.digital/teknoku/go-paginator
 
 go 1.13
 
