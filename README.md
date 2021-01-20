@@ -2,5 +2,5 @@
 
 ##### Dependencies
 
-- github.com/jinzhu/gorm
-- github.com/verzth/jumper (For Demo Sources)
+- gorm.io/gorm
+- git.teknoku.digital/teknoku/jumper (For Demo Sources)
