@@ -53,26 +53,24 @@ func Paginate(p *Param, result interface{}) *Pagination {
 		}
 	}
 
-	done := make(chan bool, 1)
 	var paginate Pagination
 	var countInPage int
 	var count int64
 	var offset int
 
-	go countRecords(db, result, done, &count)
+	countRecords(db, result, &count)
 
 	if p.Page == 1 {
 		offset = 0
 	} else {
 		offset = (p.Page - 1) * p.Limit
 	}
-	db.Session(&gorm.Session{}).Limit(p.Limit).Offset(offset).Find(result)
+	db.Session(&gorm.Session{WithConditions: true}).Limit(p.Limit).Offset(offset).Find(result)
 
 	indirect := reflect.ValueOf(result)
 	if indirect.IsValid() && indirect.Elem().Kind() == reflect.Slice {
 		countInPage = indirect.Elem().Len()
 	}
-	<-done
 
 	paginate.FirstPageUrl = fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, 1)
 	paginate.Path = fmt.Sprintf("%s%s", p.Req.Host, p.Req.URL.Path)
@@ -109,7 +107,6 @@ func Paginate(p *Param, result interface{}) *Pagination {
 	return &paginate
 }
 
-func countRecords(db *gorm.DB, anyType interface{}, done chan bool, count *int64) {
-	db.Session(&gorm.Session{}).Model(anyType).Count(count)
-	done <- true
+func countRecords(db *gorm.DB, anyType interface{}, count *int64) {
+	db.Session(&gorm.Session{WithConditions: true}).Model(anyType).Count(count)
 }

@@ -1,3 +1,5 @@
+git.teknoku.digital/teknoku/go-utils v0.3.0/go.mod h1:AUowhIIOVBH2U99quLWkFRYab47bf6sX0n1UPqpOHVo=
+git.teknoku.digital/teknoku/jumper v0.7.0/go.mod h1:sSsoMCdVO3MIH/gNYuOrfL0FRi7RY3ErytRE6L+Zn/c=
 github.com/denisenkom/go-mssqldb v0.0.0-20191124224453-732737034ffd/go.mod h1:xbL0rPBG9cCiLr28tMa8zpbdarY27NDyej4t/EjAShU=
 github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5/go.mod h1:a2zkGnVExMxdzMo3M0Hi/3sEU+cWnZpSni0O6/Yb/P0=
 github.com/go-sql-driver/mysql v1.4.1/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
