@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"git.teknoku.digital/teknoku/jumper"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/verzth/jumper"
 	"net/http"
 )
 

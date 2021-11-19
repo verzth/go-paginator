@@ -65,7 +65,7 @@ func Paginate(p *Param, result interface{}) *Pagination {
 	} else {
 		offset = (p.Page - 1) * p.Limit
 	}
-	db.Session(&gorm.Session{WithConditions: true}).Limit(p.Limit).Offset(offset).Find(result)
+	db.Session(&gorm.Session{}).Limit(p.Limit).Offset(offset).Find(result)
 
 	indirect := reflect.ValueOf(result)
 	if indirect.IsValid() && indirect.Elem().Kind() == reflect.Slice {
@@ -108,5 +108,5 @@ func Paginate(p *Param, result interface{}) *Pagination {
 }
 
 func countRecords(db *gorm.DB, anyType interface{}, count *int64) {
-	db.Session(&gorm.Session{WithConditions: true}).Model(anyType).Count(count)
+	db.Session(&gorm.Session{}).Model(anyType).Count(count)
 }
