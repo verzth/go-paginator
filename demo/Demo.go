@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"git.teknoku.digital/teknoku/jumper"
+	"git.verzth.work/go/jumper"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -14,7 +14,7 @@ func main() {
 	r.HandleFunc("/", Index).Methods("GET")
 
 	err := http.ListenAndServe(":9999", handlers.CORS(
-		handlers.AllowedHeaders([]string{"Content-Type","Authorization"}),
+		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
 		handlers.AllowedMethods([]string{http.MethodGet}),
 		handlers.AllowedOrigins([]string{"*"}),
 	)(r))
