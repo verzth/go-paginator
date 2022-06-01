@@ -10,32 +10,32 @@ import (
 
 type Param struct {
 	DB      *gorm.DB
-	Req		*http.Request
+	Req     *http.Request
 	Page    int
 	Limit   int
 	OrderBy []string
 	ShowSQL bool
 }
 
-type Pagination struct {
-	From int `json:"from"`
-	To int `json:"to"`
-	Total int64 `json:"total"`
-	Data interface{} `json:"data"`
-	PerPage int `json:"per_page"`
-	CurrentPage int `json:"current_page"`
-	Offset int `json:"-"`
-	FirstPageUrl string `json:"first_page_url"`
-	PrevPage *int `json:"prev_page"`
-	PrevPageUrl *string `json:"prev_page_url"`
-	NextPage *int `json:"next_page"`
-	NextPageUrl *string `json:"next_page_url"`
-	LastPage int `json:"last_page"`
-	LastPageUrl string `json:"last_page_url"`
-	Path string `json:"path"`
+type Pagination[T any] struct {
+	From         int     `json:"from"`
+	To           int     `json:"to"`
+	Total        int64   `json:"total"`
+	Data         T       `json:"data"`
+	PerPage      int     `json:"per_page"`
+	CurrentPage  int     `json:"current_page"`
+	Offset       int     `json:"-"`
+	FirstPageUrl string  `json:"first_page_url"`
+	PrevPage     *int    `json:"prev_page"`
+	PrevPageUrl  *string `json:"prev_page_url"`
+	NextPage     *int    `json:"next_page"`
+	NextPageUrl  *string `json:"next_page_url"`
+	LastPage     int     `json:"last_page"`
+	LastPageUrl  string  `json:"last_page_url"`
+	Path         string  `json:"path"`
 }
 
-func Paginate(p *Param, result interface{}) *Pagination {
+func Paginate[T any](p *Param, result interface{}) *Pagination[T] {
 	db := p.DB
 
 	if p.ShowSQL {
@@ -53,12 +53,12 @@ func Paginate(p *Param, result interface{}) *Pagination {
 		}
 	}
 
-	var paginate Pagination
+	var paginate Pagination[T]
 	var countInPage int
 	var count int64
 	var offset int
 
-	countRecords(db, result, &count)
+	countRecords[T](db, result, &count)
 
 	if p.Page == 1 {
 		offset = 0
@@ -84,8 +84,8 @@ func Paginate(p *Param, result interface{}) *Pagination {
 	paginate.LastPage = int(math.Ceil(float64(count) / float64(p.Limit)))
 	paginate.LastPageUrl = fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, paginate.LastPage)
 	if countInPage > 0 {
-		paginate.From = offset+1
-		paginate.To = offset+countInPage
+		paginate.From = offset + 1
+		paginate.To = offset + countInPage
 	} else {
 		paginate.From = 0
 		paginate.To = 0
@@ -107,6 +107,6 @@ func Paginate(p *Param, result interface{}) *Pagination {
 	return &paginate
 }
 
-func countRecords(db *gorm.DB, anyType interface{}, count *int64) {
+func countRecords[T any](db *gorm.DB, anyType T, count *int64) {
 	db.Session(&gorm.Session{}).Model(anyType).Count(count)
 }
