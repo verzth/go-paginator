@@ -1,16 +1,14 @@
 package paginator
 
 import (
-	"fmt"
 	"gorm.io/gorm"
 	"math"
-	"net/http"
 	"reflect"
+	"sync"
 )
 
 type Param struct {
 	DB      *gorm.DB
-	Req     *http.Request
 	Page    int
 	Limit   int
 	OrderBy []string
@@ -18,24 +16,19 @@ type Param struct {
 }
 
 type Pagination[T any] struct {
-	From         int     `json:"from"`
-	To           int     `json:"to"`
-	Total        int64   `json:"total"`
-	Data         T       `json:"data"`
-	PerPage      int     `json:"per_page"`
-	CurrentPage  int     `json:"current_page"`
-	Offset       int     `json:"-"`
-	FirstPageUrl string  `json:"first_page_url"`
-	PrevPage     *int    `json:"prev_page"`
-	PrevPageUrl  *string `json:"prev_page_url"`
-	NextPage     *int    `json:"next_page"`
-	NextPageUrl  *string `json:"next_page_url"`
-	LastPage     int     `json:"last_page"`
-	LastPageUrl  string  `json:"last_page_url"`
-	Path         string  `json:"path"`
+	From        int   `json:"from"`
+	To          int   `json:"to"`
+	Total       int64 `json:"total"`
+	Data        T     `json:"data"`
+	PerPage     int   `json:"per_page"`
+	CurrentPage int   `json:"current_page"`
+	Offset      int   `json:"-"`
+	PrevPage    *int  `json:"prev_page"`
+	NextPage    *int  `json:"next_page"`
+	LastPage    int   `json:"last_page"`
 }
 
-func Paginate[T any](p *Param, result T) *Pagination[T] {
+func Paginate[T any](p Param, result T) Pagination[T] {
 	db := p.DB
 
 	if p.ShowSQL {
@@ -58,7 +51,9 @@ func Paginate[T any](p *Param, result T) *Pagination[T] {
 	var count int64
 	var offset int
 
-	countRecords[T](db, result, &count)
+	wg := new(sync.WaitGroup)
+	wg.Add(1)
+	go countRecords[T](wg, db, result, &count)
 
 	if p.Page == 1 {
 		offset = 0
@@ -72,8 +67,7 @@ func Paginate[T any](p *Param, result T) *Pagination[T] {
 		countInPage = indirect.Elem().Len()
 	}
 
-	paginate.FirstPageUrl = fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, 1)
-	paginate.Path = fmt.Sprintf("%s%s", p.Req.Host, p.Req.URL.Path)
+	wg.Wait()
 
 	paginate.Total = count
 	paginate.Data = result
@@ -82,7 +76,6 @@ func Paginate[T any](p *Param, result T) *Pagination[T] {
 	paginate.Offset = offset
 	paginate.PerPage = p.Limit
 	paginate.LastPage = int(math.Ceil(float64(count) / float64(p.Limit)))
-	paginate.LastPageUrl = fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, paginate.LastPage)
 	if countInPage > 0 {
 		paginate.From = offset + 1
 		paginate.To = offset + countInPage
@@ -93,20 +86,17 @@ func Paginate[T any](p *Param, result T) *Pagination[T] {
 
 	if p.Page > 1 {
 		prevPage := p.Page - 1
-		prevPageUrl := fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, prevPage)
 		paginate.PrevPage = &prevPage
-		paginate.PrevPageUrl = &prevPageUrl
 	}
 
 	if p.Page < paginate.LastPage {
 		nextPage := p.Page + 1
-		nextPageUrl := fmt.Sprintf("%s%s?page=%d", p.Req.Host, p.Req.URL.Path, nextPage)
 		paginate.NextPage = &nextPage
-		paginate.NextPageUrl = &nextPageUrl
 	}
-	return &paginate
+	return paginate
 }
 
-func countRecords[T any](db *gorm.DB, anyType T, count *int64) {
+func countRecords[T any](wg *sync.WaitGroup, db *gorm.DB, anyType T, count *int64) {
 	db.Session(&gorm.Session{}).Model(anyType).Count(count)
+	wg.Done()
 }
