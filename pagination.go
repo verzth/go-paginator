@@ -35,7 +35,7 @@ type Pagination[T any] struct {
 	Path         string  `json:"path"`
 }
 
-func Paginate[T any](p *Param, result interface{}) *Pagination[T] {
+func Paginate[T any](p *Param, result T) *Pagination[T] {
 	db := p.DB
 
 	if p.ShowSQL {
