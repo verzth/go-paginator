@@ -15,11 +15,11 @@ type Param struct {
 	ShowSQL bool
 }
 
-type Pagination[T any] struct {
+type Pagination struct {
 	From        int   `json:"from"`
 	To          int   `json:"to"`
 	Total       int64 `json:"total"`
-	Data        T     `json:"data"`
+	Data        any   `json:"data"`
 	PerPage     int   `json:"per_page"`
 	CurrentPage int   `json:"current_page"`
 	Offset      int   `json:"-"`
@@ -28,7 +28,7 @@ type Pagination[T any] struct {
 	LastPage    int   `json:"last_page"`
 }
 
-func Paginate[T any](p Param, result T) Pagination[T] {
+func Paginate(p Param, result any) Pagination {
 	db := p.DB
 
 	if p.ShowSQL {
@@ -46,14 +46,14 @@ func Paginate[T any](p Param, result T) Pagination[T] {
 		}
 	}
 
-	var paginate Pagination[T]
+	var paginate Pagination
 	var countInPage int
 	var count int64
 	var offset int
 
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
-	go countRecords[T](wg, db, result, &count)
+	go countRecords(wg, db, result, &count)
 
 	if p.Page == 1 {
 		offset = 0
