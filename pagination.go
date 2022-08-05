@@ -5,6 +5,7 @@ import (
 	"math"
 	"reflect"
 	"sync"
+	"unsafe"
 )
 
 type Param struct {
@@ -28,7 +29,9 @@ type Pagination struct {
 	LastPage    int   `json:"last_page"`
 }
 
-func Paginate(p Param, result any) Pagination {
+func Paginate(p Param, typ any) Pagination {
+	var ptrRes unsafe.Pointer
+	reflect.NewAt(reflect.TypeOf(typ), ptrRes)
 	db := p.DB
 
 	if p.ShowSQL {
@@ -53,16 +56,16 @@ func Paginate(p Param, result any) Pagination {
 
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
-	go countRecords(wg, db, result, &count)
+	go countRecords(wg, db, ptrRes, &count)
 
 	if p.Page == 1 {
 		offset = 0
 	} else {
 		offset = (p.Page - 1) * p.Limit
 	}
-	db.Session(&gorm.Session{}).Limit(p.Limit).Offset(offset).Find(result)
+	db.Session(&gorm.Session{}).Limit(p.Limit).Offset(offset).Find(ptrRes)
 
-	indirect := reflect.ValueOf(result)
+	indirect := reflect.ValueOf(ptrRes)
 	if indirect.IsValid() && indirect.Elem().Kind() == reflect.Slice {
 		countInPage = indirect.Elem().Len()
 	}
@@ -70,7 +73,7 @@ func Paginate(p Param, result any) Pagination {
 	wg.Wait()
 
 	paginate.Total = count
-	paginate.Data = result
+	paginate.Data = ptrRes
 	paginate.CurrentPage = p.Page
 
 	paginate.Offset = offset
