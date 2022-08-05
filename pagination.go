@@ -3,7 +3,6 @@ package paginator
 import (
 	"gorm.io/gorm"
 	"math"
-	"reflect"
 	"sync"
 )
 
@@ -63,10 +62,7 @@ func Paginate[T any](p Param) Pagination {
 	}
 	db.Session(&gorm.Session{}).Limit(p.Limit).Offset(offset).Find(&res)
 
-	indirect := reflect.ValueOf(res)
-	if indirect.IsValid() && indirect.Elem().Kind() == reflect.Slice {
-		countInPage = indirect.Elem().Len()
-	}
+	countInPage = len(res)
 
 	wg.Wait()
 
