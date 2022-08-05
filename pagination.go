@@ -28,8 +28,8 @@ type Pagination struct {
 	LastPage    int   `json:"last_page"`
 }
 
-func Paginate(p Param, typ any) Pagination {
-	res := reflect.MakeSlice(reflect.TypeOf(typ), 0, 0)
+func Paginate[T any](p Param) Pagination {
+	res := make([]T, 0)
 	db := p.DB
 
 	if p.ShowSQL {
@@ -54,16 +54,16 @@ func Paginate(p Param, typ any) Pagination {
 
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
-	go countRecords(wg, db, res.Pointer(), &count)
+	go countRecords(wg, db, res, &count)
 
 	if p.Page == 1 {
 		offset = 0
 	} else {
 		offset = (p.Page - 1) * p.Limit
 	}
-	db.Session(&gorm.Session{}).Limit(p.Limit).Offset(offset).Find(res.Pointer())
+	db.Session(&gorm.Session{}).Limit(p.Limit).Offset(offset).Find(&res)
 
-	indirect := reflect.ValueOf(res.Pointer())
+	indirect := reflect.ValueOf(res)
 	if indirect.IsValid() && indirect.Elem().Kind() == reflect.Slice {
 		countInPage = indirect.Elem().Len()
 	}
@@ -71,7 +71,7 @@ func Paginate(p Param, typ any) Pagination {
 	wg.Wait()
 
 	paginate.Total = count
-	paginate.Data = res.Pointer()
+	paginate.Data = res
 	paginate.CurrentPage = p.Page
 
 	paginate.Offset = offset
@@ -94,6 +94,7 @@ func Paginate(p Param, typ any) Pagination {
 		nextPage := p.Page + 1
 		paginate.NextPage = &nextPage
 	}
+
 	return paginate
 }
 
